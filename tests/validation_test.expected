@@ -1,0 +1,39 @@
+valid: OK
+  name=Ada age=36 active=True
+  role(default)=member has_nickname=False
+  address.zip=90210
+  tag count=2
+  tags[0].key=vip weight=10
+  round-trip ok=True
+missing-required: 5 error(s)
+  - age [missing] field required
+  - email [missing] field required
+  - nickname [too_short] string length 0 is less than minimum 1
+  - address [missing] field required
+  - tags [missing] field required
+wrong-type: 7 error(s)
+  - name [type] expected string, got integer
+  - age [type] expected integer, got string
+  - score [type] expected number, got boolean
+  - active [type] expected boolean, got string
+  - email [type] expected string, got integer
+  - address [type] expected object, got array
+  - tags [type] expected array, got object
+constraints: 7 error(s)
+  - name [too_long] string length 28 is greater than maximum 20
+  - age [too_large] value 200 is greater than maximum 130
+  - score [too_large] value 2.5 is greater than maximum 1
+  - email [pattern] string does not match pattern [^@ ]+@[^@ ]+\.[a-z]{2,}
+  - address.zip [pattern] string does not match pattern [0-9]{5}
+  - tags[0].key [too_short] string length 0 is less than minimum 1
+  - tags[0].weight [too_large] value 500 is greater than maximum 100
+nested-path: 1 error(s)
+  - tags[1].weight [too_large] value 999 is greater than maximum 100
+extra-forbid: 2 error(s)
+  - b [extra_forbidden] unexpected field
+  - c [extra_forbidden] unexpected field
+extra-allow: OK kept=9
+not-object: 1 error(s)
+  - (root) [type] expected object, got array
+pat zip 90210=True
+pat zip 9021=False

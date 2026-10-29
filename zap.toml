@@ -1,0 +1,24 @@
+# Zap project manifest (zap.toml). TOML, Cargo-style (D-0052).
+#
+# `validation` is a non-core, official-tier package (D-0056): a pydantic-style
+# runtime data-validation and typed-model library, developed under zaplang-io
+# and installed/managed by the Zap package manager (I#69) — NOT a bundled stdlib
+# module. It is the keystone that the planned web framework and JSON Schema
+# packages build on. It implements its validation engine NATIVELY in Zap (it
+# does not wrap pydantic-core, which is Rust); the only runtime it leans on is
+# the stdlib `json` DOM (JsonValue) for input/output.
+#
+# Layout (dogfoods Zap-to-Zap module imports, D-0081 / zaplang-io/zap#283):
+#   src/validation.zap          — the public API: builders (model/field/int_t/
+#                                 str_t/...), the engine (validate), and the core
+#                                 types (Schema/Field/FieldType/ValErr/Model/
+#                                 ValidationResult).
+#   src/validation/pattern.zap  — a self-contained regex-subset matcher backing
+#                                 the string `pattern=` constraint.
+# A consumer with `validation` as a dependency imports it as `import validation`.
+[package]
+name = "validation"
+version = "0.1.0"
+
+[dependencies]
+# None. validation uses only the stdlib `json` DOM (JsonValue).

@@ -1,0 +1,51 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # Repo hygiene: layout + .zap source sanity. Does not compile Zap.
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell script syntax
+        run: |
+          for f in tools/*.sh; do echo "sh -n $f"; sh -n "$f"; done
+      - name: Layout sanity
+        run: |
+          test -f zap.toml
+          test -f src/validation.zap
+          test -f src/validation/pattern.zap
+          test -f tests/validation_test.zap
+          test -s tests/validation_test.expected
+          test -f examples/quickstart.zap
+          test -f DESIGN.md
+          echo "layout OK"
+      - name: No CRLF / no tabs in .zap sources
+        run: |
+          ! grep -rlP '\r$' --include='*.zap' . || (echo "CRLF found" && exit 1)
+          ! grep -rlP '\t'  --include='*.zap' . || (echo "tab in .zap" && exit 1)
+
+  # Real compile + run of the offline test suite through the prebuilt Zap
+  # toolchain image (zaplang-io/zap#277), published to GHCR and anonymously
+  # pullable. The image ships no git/node, so `container:` + actions/checkout is
+  # not usable; we check out on the host and run the toolchain via `docker run`
+  # over the mounted workspace. Fast and reproducible — no building the compiler
+  # from source. Not a required gate yet (the repo has no required checks).
+  zap-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Offline suite + example build in the Zap toolchain image
+        run: |
+          docker run --rm -v "$PWD":/w -w /w ghcr.io/zaplang-io/zap:latest sh -c '
+            set -e
+            echo "zap: $(zap --version)"
+            # Compile + run the native validation test suite (multi-module).
+            sh tools/run-tests.sh
+            # Compile-smoke the examples.
+            sh tools/build-examples.sh
+          '
